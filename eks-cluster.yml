@@ -5,7 +5,11 @@ Parameters:
   ClusterName:
     Type: String
     Description: Put the cluster name to deploy
-  NumWorkerNodes:
+  MinSize:
+    Type: Number
+    Description: Number of worker nodes to create
+    Default: 1
+  Maxsize:
     Type: Number
     Description: Number of worker nodes to create
     Default: 2
@@ -16,10 +20,6 @@ Parameters:
   k8sSubnets:
     Description: Subnets for the ECS Clusters
     Type: List<AWS::EC2::Subnet::Id>
-  KeyPairName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the container instances
-    Type: AWS::EC2::KeyPair::KeyName
-    ConstraintDescription: Must be a valid EC2 keypair.
   EksAmiIds:    
     Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
     Default: /aws/service/eks/optimized-ami/1.14/amazon-linux-2/recommended/image_id
@@ -236,16 +236,12 @@ Resources:
         - !Ref WorkerNodesInstanceType
       CapacityType: SPOT
       ScalingConfig:
-        MinSize: 1
-        DesiredSize: 1
-        MaxSize: 3
-      Labels:
-        kube-node-group: True
-        app: cool-app
+        MinSize: !Ref MinSize
+        DesiredSize: !Ref MinSize
+        MaxSize: !Ref Maxsize
       Subnets: !Ref k8sSubnets
       Tags: 
         Name: !Sub '${ClusterName}-Nodes'
-        purpose: learning
         eks_role: node_group
 
 
